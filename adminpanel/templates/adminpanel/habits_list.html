@@ -1,0 +1,43 @@
+{% extends "adminpanel/base.html" %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Hábitos</h2>
+    <a href="/panel/habits/create/" class="btn btn-primary">+ Novo Hábito</a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <table class="table table-striped mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Título</th>
+                    <th>Descrição</th>
+                    <th>Usuário</th>
+                    <th style="width: 140px;">Ações</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for h in habits %}
+                <tr>
+                    <td>{{ h.id }}</td>
+                    <td>{{ h.title }}</td>
+                    <td>{{ h.description|truncatechars:50 }}</td>
+                    <td>{{ h.user }}</td>
+
+                    <td>
+                        <a href="/panel/habits/{{ h.id }}/edit/" class="btn btn-sm btn-warning">Editar</a>
+                        <a href="/panel/habits/{{ h.id }}/delete/" 
+                           class="btn btn-sm btn-danger"
+                           onclick="return confirm('Excluir este hábito?')">Excluir</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

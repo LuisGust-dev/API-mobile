@@ -1,47 +1,56 @@
 {% extends "adminpanel/base.html" %}
+
 {% block content %}
 <h2>Detalhes do Usuário</h2>
-
-<div class="card p-3 shadow-sm mt-3">
-  <h4>{{ data.user.name }}</h4>
-  <p>Email: {{ data.user.email }}</p>
-</div>
-
 <hr>
 
-<div class="row mt-4">
+{% if error %}
+<div class="alert alert-danger">{{ error }}</div>
+{% endif %}
 
-  <div class="col-md-3">
-    <div class="card p-3 shadow-sm">
-      <h5>Água</h5>
-      <p>Total logs: {{ data.water.total_logs }}</p>
-      <p>Total ML: {{ data.water.total_ml }}</p>
-    </div>
-  </div>
-
-  <div class="col-md-3">
-    <div class="card p-3 shadow-sm">
-      <h5>Exercícios</h5>
-      <p>Logs: {{ data.exercise.total_logs }}</p>
-      <p>Total minutos: {{ data.exercise.total_minutes }}</p>
-    </div>
-  </div>
-
-  <div class="col-md-3">
-    <div class="card p-3 shadow-sm">
-      <h5>Hábitos</h5>
-      <p>Hábitos cadastrados: {{ data.habits }}</p>
-    </div>
-  </div>
-
-  <div class="col-md-3">
-    <div class="card p-3 shadow-sm">
-      <h5>Conquistas</h5>
-      <p>Desbloqueadas: {{ data.achievements_unlocked }}</p>
-      <p>Total: {{ data.achievements_total }}</p>
-    </div>
-  </div>
-
+{% if user %}
+<div class="card p-3 shadow-sm mb-4">
+    <h4>{{ user.name }}</h4>
+    <p><strong>Email:</strong> {{ user.email }}</p>
+    <p><strong>ID:</strong> {{ user.id }}</p>
 </div>
+{% endif %}
+
+{% if stats %}
+<h4>Estatísticas Gerais</h4>
+<div class="row">
+
+    <div class="col-md-4">
+        <div class="card p-3 shadow-sm mb-3">
+            <h6>Água</h6>
+            <p>Total registros: {{ stats.water.total_logs }}</p>
+            <p>Total consumido: {{ stats.water.total_ml }} ml</p>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card p-3 shadow-sm mb-3">
+            <h6>Exercícios</h6>
+            <p>Total registros: {{ stats.exercise.total_logs }}</p>
+            <p>Minutos acumulados: {{ stats.exercise.total_minutes }} min</p>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card p-3 shadow-sm mb-3">
+            <h6>Hábitos</h6>
+            <p>Total hábitos: {{ stats.habits }}</p>
+        </div>
+    </div>
+</div>
+
+<div class="card p-3 shadow-sm">
+    <h6>Conquistas</h6>
+    <p>Desbloqueadas: {{ stats.achievements_unlocked }}</p>
+    <p>Total existentes: {{ stats.achievements_total }}</p>
+</div>
+{% endif %}
+
+<a href="/panel/users/" class="btn btn-secondary mt-3">Voltar</a>
 
 {% endblock %}

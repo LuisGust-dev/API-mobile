@@ -1,0 +1,49 @@
+{% extends "adminpanel/base.html" %}
+{% block content %}
+
+<h2>{% if achievement %}Editar Conquista{% else %}Criar Conquista{% endif %}</h2>
+<hr>
+
+<form method="POST" class="card p-4 shadow-sm">
+    {% csrf_token %}
+
+    <div class="mb-3">
+        <label class="form-label">Código</label>
+        <input type="text" name="code" class="form-control"
+               value="{{ achievement.code|default:'' }}" required>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Título</label>
+        <input type="text" name="title" class="form-control"
+               value="{{ achievement.title|default:'' }}" required>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Descrição</label>
+        <textarea name="description" class="form-control" rows="3" required>{{ achievement.description|default:'' }}</textarea>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Ícone (ex: emoji)</label>
+        <input type="text" name="icon" class="form-control"
+               value="{{ achievement.icon|default:'' }}" required>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Cor (hex, nome ou classe)</label>
+        <input type="text" name="color" class="form-control"
+               value="{{ achievement.color|default:'' }}" required>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Meta</label>
+        <input type="number" name="goal" class="form-control"
+               value="{{ achievement.goal|default:'' }}" required>
+    </div>
+
+    <button class="btn btn-success">Salvar</button>
+    <a href="/panel/achievements/" class="btn btn-secondary">Cancelar</a>
+</form>
+
+{% endblock %}

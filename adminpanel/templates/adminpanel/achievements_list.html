@@ -1,0 +1,43 @@
+{% extends "adminpanel/base.html" %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Conquistas</h2>
+    <a href="/panel/achievements/create/" class="btn btn-primary">+ Nova Conquista</a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <table class="table table-striped mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Código</th>
+                    <th>Título</th>
+                    <th>Meta</th>
+                    <th style="width: 150px;">Ações</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for a in achievements %}
+                <tr>
+                    <td>{{ a.id }}</td>
+                    <td><span class="badge bg-dark">{{ a.code }}</span></td>
+                    <td>{{ a.title }}</td>
+                    <td>{{ a.goal }}</td>
+
+                    <td>
+                        <a href="/panel/achievements/{{ a.id }}/edit/" class="btn btn-sm btn-warning">Editar</a>
+                        <a href="/panel/achievements/{{ a.id }}/delete/"
+                           class="btn btn-sm btn-danger"
+                           onclick="return confirm('Excluir esta conquista?')">Excluir</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

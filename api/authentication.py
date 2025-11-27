@@ -1,10 +1,8 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
-from django.contrib.auth.hashers import check_password
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import AppUser
-
+from django.contrib.auth.hashers import check_password, make_password
+from .models import AppUser  # <-- usa seu modelo customizado
 
 class AppLoginView(APIView):
     def post(self, request):
@@ -16,11 +14,10 @@ class AppLoginView(APIView):
         except AppUser.DoesNotExist:
             return Response({"detail": "Usuário não encontrado"}, status=404)
 
-        # Aqui, como sua senha não está criptografada, compare direto:
-        if user.password != password:
+        # senha criptografada
+        if not check_password(password, user.password):
             return Response({"detail": "Senha incorreta"}, status=400)
 
-        # Gerar token manualmente
         refresh = RefreshToken.for_user(user)
 
         return Response({
@@ -30,3 +27,25 @@ class AppLoginView(APIView):
             "name": user.name,
             "email": user.email,
         })
+
+
+class AppRegisterView(APIView):
+    def post(self, request):
+        name = request.data.get("name")
+        email = request.data.get("email")
+        password = request.data.get("password")
+
+        if AppUser.objects.filter(email=email).exists():
+            return Response({"detail": "E-mail já cadastrado!"}, status=400)
+
+        # cria com senha criptografada
+        user = AppUser.objects.create(
+            name=name,
+            email=email,
+            password=make_password(password)
+        )
+
+        return Response({
+            "message": "Usuário criado com sucesso!",
+            "user_id": user.id,
+        }, status=201)

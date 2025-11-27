@@ -1,0 +1,33 @@
+{% extends "adminpanel/base.html" %}
+{% block content %}
+
+<h2>{% if habit %}Editar Hábito{% else %}Criar Hábito{% endif %}</h2>
+<hr>
+
+<form method="POST" class="card p-4 shadow-sm">
+    {% csrf_token %}
+
+    <div class="mb-3">
+        <label class="form-label">Título</label>
+        <input type="text" name="name" class="form-control"
+               value="{{ habit.title|default:'' }}" required>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Descrição</label>
+        <textarea name="description" class="form-control" rows="3" required>{{ habit.description|default:'' }}</textarea>
+    </div>
+
+    {% if not habit %}
+    <div class="mb-3">
+        <label class="form-label">ID do Usuário</label>
+        <input type="number" name="user_id" class="form-control" required>
+        <small class="text-muted">Informe o ID do usuário dono do hábito.</small>
+    </div>
+    {% endif %}
+
+    <button class="btn btn-success">Salvar</button>
+    <a href="/panel/habits/" class="btn btn-secondary">Cancelar</a>
+</form>
+
+{% endblock %}

@@ -5,13 +5,45 @@ from django.contrib.auth.models import User
 # -------------------------
 # USERS
 # -------------------------
-class AppUser(models.Model):
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
+from django.db import models
+
+
+class AppUserManager(BaseUserManager):
+    def create_user(self, email, name, password=None):
+        if not email:
+            raise ValueError("O usuário precisa de um e-mail")
+
+        email = self.normalize_email(email)
+        user = self.model(email=email, name=name)
+        user.set_password(password)  # 🔥 Agora criptografa corretamente
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email, name, password):
+        user = self.create_user(email, name, password)
+        user.is_staff = True
+        user.is_superuser = True
+        user.save(using=self._db)
+        return user
+
+
+class AppUser(AbstractBaseUser, PermissionsMixin):
     name = models.CharField(max_length=150)
     email = models.EmailField(unique=True)
-    password = models.CharField(max_length=255)
+
+    # Campos obrigatórios para qualquer usuário Django
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
+
+    objects = AppUserManager()
+
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = ["name"]
 
     def __str__(self):
         return self.name
+
 
 
 # -------------------------
@@ -89,10 +121,19 @@ class Achievement(models.Model):
     description = models.TextField()
     icon = models.CharField(max_length=50)
     color = models.CharField(max_length=50)
-    unlocked = models.IntegerField(default=0)
-    progress = models.IntegerField(default=0)
-    goal = models.IntegerField(default=1)
-    unlocked_date = models.CharField(max_length=100, null=True, blank=True)
+    goal = models.IntegerField(default=1)  # quantos eventos precisa p/ concluir
 
     def __str__(self):
         return self.title
+
+
+class UserAchievement(models.Model):
+    user = models.ForeignKey("AppUser", on_delete=models.CASCADE, related_name="user_achievements")
+    achievement = models.ForeignKey(Achievement, on_delete=models.CASCADE, related_name="user_achievements")
+
+    unlocked = models.BooleanField(default=False)
+    progress = models.IntegerField(default=0)
+    unlocked_date = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.user.name} - {self.achievement.title}"

@@ -1,10 +1,38 @@
 from django.urls import path
-from .views import panel_login, dashboard, user_details, users_page
+from .views import (
+    logout_view, panel_login, dashboard,
+
+    # Users
+    users_page, user_details, user_edit, user_delete,
+
+    # Habits
+    habits_list, habit_create, habit_edit, habit_delete,
+
+    # Achievements
+    achievements_list, achievement_create, achievement_edit, achievement_delete,
+)
 
 urlpatterns = [
-    path('login/', panel_login, name='panel_login'),
-    path('', dashboard, name='dashboard'),
-    path('users/', users_page, name='users_page'),
+    path("login/", panel_login, name="panel_login"),
+    path("", dashboard, name="dashboard"),
+
+    # USERS
+    path("users/", users_page, name="users_page"),
     path("users/<int:user_id>/", user_details, name="user_details"),
+    path("users/<int:user_id>/edit/", user_edit, name="user_edit"),
+    path("users/<int:user_id>/delete/", user_delete, name="user_delete"),
+
+    # HABITS
+    path("habits/", habits_list, name="habits_list"),
+    path("habits/create/", habit_create, name="habit_create"),
+    path("habits/<int:habit_id>/edit/", habit_edit, name="habit_edit"),
+    path("habits/<int:habit_id>/delete/", habit_delete, name="habit_delete"),
+
+    # ACHIEVEMENTS
+    path("achievements/", achievements_list, name="achievements_list"),
+    path("achievements/create/", achievement_create, name="achievement_create"),
+    path("achievements/<int:ach_id>/edit/", achievement_edit, name="achievement_edit"),
+    path("achievements/<int:ach_id>/delete/", achievement_delete, name="achievement_delete"),
+    path("logout/", logout_view, name="logout"),
 
 ]

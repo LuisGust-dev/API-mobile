@@ -5,16 +5,16 @@ from django.contrib import messages
 API_BASE = "http://127.0.0.1:8000/api"
 
 # ---------------------------------------
-# LOGIN DO ADMIN (usando JWT padrão)
+# LOGIN DO ADMIN (usando API LOGIN REAL)
 # ---------------------------------------
 def panel_login(request):
     if request.method == "POST":
-        username = request.POST['username']
+        email = request.POST['username']  
         password = request.POST['password']
 
         response = requests.post(
-            f"{API_BASE}/auth/login/",
-            json={"username": username, "password": password}
+            "http://127.0.0.1:8000/api/auth/login/",
+            json={"email": email, "password": password}
         )
 
         if response.status_code == 200:
@@ -27,23 +27,83 @@ def panel_login(request):
     return render(request, 'adminpanel/login.html')
 
 
+
+
+
 # ---------------------------------------
 # DASHBOARD
 # ---------------------------------------
 def dashboard(request):
     token = request.session.get("token")
-
     if not token:
-        return redirect('panel_login')
+        return redirect("panel_login")
 
     headers = {"Authorization": f"Bearer {token}"}
-    users = requests.get(f"{API_BASE}/users/", headers=headers).json()
+
+    # ----- Usuários -----
+    try:
+        users = requests.get(f"{API_BASE}/users/", headers=headers).json()
+    except:
+        users = []
+
+    # ----- Água -----
+    try:
+        water_logs = requests.get(f"{API_BASE}/water/logs/", headers=headers).json()
+    except:
+        water_logs = []
+
+    water_by_day = {}
+    for w in water_logs:
+        day = w.get("date", "Sem data")
+        water_by_day[day] = water_by_day.get(day, 0) + w.get("amount_ml", 0)
+
+    chart_water = {
+        "labels": list(water_by_day.keys()),
+        "values": list(water_by_day.values()),
+    }
+
+    # ----- Exercício -----
+    try:
+        ex_logs = requests.get(f"{API_BASE}/exercise/logs/", headers=headers).json()
+    except:
+        ex_logs = []
+
+    ex_by_day = {}
+    for e in ex_logs:
+        day = e.get("date", "Sem data")
+        ex_by_day[day] = ex_by_day.get(day, 0) + e.get("duration_min", 0)
+
+    chart_exercise = {
+        "labels": list(ex_by_day.keys()),
+        "values": list(ex_by_day.values()),
+    }
+
+    # ----- Hábitos -----
+    try:
+        habits = requests.get(f"{API_BASE}/habits/", headers=headers).json()
+    except:
+        habits = []
+
+    # ----- Conquistas -----
+    try:
+        achievements = requests.get(f"{API_BASE}/achievements/", headers=headers).json()
+    except:
+        achievements = []
 
     context = {
         "total_users": len(users),
+        "total_habits": len(habits),
+        "total_achievements": len(achievements),
+        "chart_water": chart_water,
+        "chart_exercise": chart_exercise,
+        "chart_users": {
+            "labels": ["Ativos"],
+            "values": [len(users)]
+        }
     }
 
-    return render(request, 'adminpanel/dashboard.html', context)
+    return render(request, "adminpanel/dashboard.html", context)
+
 
 
 # ---------------------------------------
@@ -58,13 +118,16 @@ def users_page(request):
     response = requests.get(f"{API_BASE}/users/", headers=headers)
 
     if response.status_code == 401:
-        # Token expirado → desloga
         request.session.flush()
         return redirect('panel_login')
 
     users = response.json()
     return render(request, 'adminpanel/users.html', {"users": users})
 
+
+# ---------------------------------------
+# DETALHES DO USUÁRIO
+# ---------------------------------------
 def user_details(request, user_id):
     token = request.session.get("token")
     if not token:
@@ -72,9 +135,230 @@ def user_details(request, user_id):
 
     headers = {"Authorization": f"Bearer {token}"}
 
-    response = requests.get(f"{API_BASE}/users/{user_id}/stats/", headers=headers)
+    # Buscar dados do usuário
+    user_resp = requests.get(f"{API_BASE}/users/{user_id}/", headers=headers)
+    if user_resp.status_code != 200:
+        messages.error(request, "Erro ao buscar dados do usuário.")
+        return redirect("users_page")
 
-    data = response.json()
+    user_data = user_resp.json()
 
-    return render(request, "adminpanel/user_details.html", {"data": data})
+    # Buscar estatísticas
+    stats_resp = requests.get(f"{API_BASE}/users/{user_id}/stats/", headers=headers)
+    stats_data = stats_resp.json() if stats_resp.status_code == 200 else None
 
+    return render(request, "adminpanel/user_details.html", {
+        "user": user_data,
+        "stats": stats_data,
+    })
+
+
+# ---------------------------------------
+# EDITAR USUÁRIO
+# ---------------------------------------
+def user_edit(request, user_id):
+    token = request.session.get("token")
+    if not token:
+        return redirect("panel_login")
+
+    headers = {"Authorization": f"Bearer {token}"}
+
+    resp = requests.get(f"{API_BASE}/users/{user_id}/", headers=headers)
+    if resp.status_code != 200:
+        messages.error(request, "Usuário não encontrado")
+        return redirect("users_page")
+
+    user = resp.json()
+
+    if request.method == "POST":
+        update_resp = requests.put(
+            f"{API_BASE}/users/{user_id}/",
+            headers=headers,
+            json={
+                "name": request.POST.get("name"),
+                "email": request.POST.get("email"),
+            }
+        )
+
+        if update_resp.status_code in (200, 204):
+            messages.success(request, "Usuário atualizado com sucesso!")
+            return redirect("users_page")
+        else:
+            messages.error(request, "Erro ao atualizar usuário")
+
+    return render(request, "adminpanel/user_edit.html", {"user": user})
+
+
+# ---------------------------------------
+# DELETAR USUÁRIO
+# ---------------------------------------
+def user_delete(request, user_id):
+    token = request.session.get("token")
+    if not token:
+        return redirect("panel_login")
+
+    headers = {"Authorization": f"Bearer {token}"}
+    resp = requests.delete(f"{API_BASE}/users/{user_id}/", headers=headers)
+
+    if resp.status_code in (200, 204):
+        messages.success(request, "Usuário excluído com sucesso!")
+    else:
+        messages.error(request, "Erro ao excluir usuário.")
+
+    return redirect("users_page")
+
+
+# ---------------------------------------
+# CRUD - HÁBITOS
+# ---------------------------------------
+def habits_list(request):
+    token = request.session.get("token")
+    headers = {"Authorization": f"Bearer {token}"}
+
+    resp = requests.get(f"{API_BASE}/habits/", headers=headers)
+    habits = resp.json() if resp.status_code == 200 else []
+
+    return render(request, "adminpanel/habits_list.html", {"habits": habits})
+
+
+def habit_create(request):
+    token = request.session.get("token")
+    if not token:
+        return redirect("panel_login")
+
+    if request.method == "POST":
+        headers = {"Authorization": f"Bearer {token}"}
+
+        payload = {
+            "title": request.POST["name"],
+            "description": request.POST["description"],
+            "user": request.POST["user_id"],
+        }
+
+        requests.post(f"{API_BASE}/habits/", json=payload, headers=headers)
+        return redirect("habits_list")
+
+    return render(request, "adminpanel/habit_form.html", {"habit": None})
+
+
+def habit_edit(request, habit_id):
+    token = request.session.get("token")
+    headers = {"Authorization": f"Bearer {token}"}
+
+    resp = requests.get(f"{API_BASE}/habits/{habit_id}/", headers=headers)
+    if resp.status_code != 200:
+        return redirect("habits_list")
+
+    habit = resp.json()
+
+    if request.method == "POST":
+        payload = {
+            "title": request.POST["name"],
+            "description": request.POST["description"],
+        }
+
+        requests.put(f"{API_BASE}/habits/{habit_id}/", json=payload, headers=headers)
+        return redirect("habits_list")
+
+    return render(request, "adminpanel/habit_form.html", {"habit": habit})
+
+
+def habit_delete(request, habit_id):
+    token = request.session.get("token")
+    headers = {"Authorization": f"Bearer {token}"}
+
+    requests.delete(f"{API_BASE}/habits/{habit_id}/", headers=headers)
+    return redirect("habits_list")
+
+
+# ---------------------------------------
+# LOGOUT
+# ---------------------------------------
+def logout_view(request):
+    request.session.flush()
+    return redirect("panel_login")
+
+
+# ---------------------------------------
+# CRUD - CONQUISTAS
+# ---------------------------------------
+
+def achievements_list(request):
+    token = request.session.get("token")
+    if not token:
+        return redirect("panel_login")
+
+    headers = {"Authorization": f"Bearer {token}"}
+
+    resp = requests.get(f"{API_BASE}/achievements/", headers=headers)
+    achievements = resp.json() if resp.status_code == 200 else []
+
+    return render(request, "adminpanel/achievements_list.html", {
+        "achievements": achievements
+    })
+
+
+def achievement_create(request):
+    token = request.session.get("token")
+    if not token:
+        return redirect("panel_login")
+
+    if request.method == "POST":
+        headers = {"Authorization": f"Bearer {token}"}
+
+        payload = {
+            "code": request.POST["code"],
+            "title": request.POST["title"],
+            "description": request.POST["description"],
+            "icon": request.POST["icon"],
+            "color": request.POST["color"],
+            "goal": request.POST["goal"],
+        }
+
+        requests.post(f"{API_BASE}/achievements/", json=payload, headers=headers)
+        return redirect("achievements_list")
+
+    return render(request, "adminpanel/achievement_form.html", {"achievement": None})
+
+
+def achievement_edit(request, ach_id):
+    token = request.session.get("token")
+    if not token:
+        return redirect("panel_login")
+
+    headers = {"Authorization": f"Bearer {token}"}
+
+    resp = requests.get(f"{API_BASE}/achievements/{ach_id}/", headers=headers)
+    if resp.status_code != 200:
+        return redirect("achievements_list")
+
+    achievement = resp.json()
+
+    if request.method == "POST":
+        payload = {
+            "code": request.POST["code"],
+            "title": request.POST["title"],
+            "description": request.POST["description"],
+            "icon": request.POST["icon"],
+            "color": request.POST["color"],
+            "goal": request.POST["goal"],
+        }
+
+        requests.put(f"{API_BASE}/achievements/{ach_id}/", json=payload, headers=headers)
+        return redirect("achievements_list")
+
+    return render(request, "adminpanel/achievement_form.html", {
+        "achievement": achievement
+    })
+
+
+def achievement_delete(request, ach_id):
+    token = request.session.get("token")
+    if not token:
+        return redirect("panel_login")
+
+    headers = {"Authorization": f"Bearer {token}"}
+
+    requests.delete(f"{API_BASE}/achievements/{ach_id}/", headers=headers)
+
+    return redirect("achievements_list")

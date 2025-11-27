@@ -1,8 +1,9 @@
 from rest_framework import serializers
+from django.contrib.auth.hashers import make_password
 from .models import (
     AppUser, WaterLog, WaterSettings,
     ExerciseLog, ExerciseSettings,
-    Habit, HabitLog, Achievement
+    Habit, HabitLog, Achievement, UserAchievement
 )
 
 # ---------------------------
@@ -11,7 +12,14 @@ from .models import (
 class AppUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = AppUser
-        fields = '__all__'
+        fields = ['id', 'name', 'email', 'password']
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
+
+    def create(self, validated_data):
+        validated_data['password'] = make_password(validated_data['password'])
+        return super().create(validated_data)
 
 
 # ---------------------------
@@ -62,7 +70,33 @@ class HabitLogSerializer(serializers.ModelSerializer):
 # ---------------------------
 # ACHIEVEMENTS
 # ---------------------------
+
+
+
 class AchievementSerializer(serializers.ModelSerializer):
     class Meta:
         model = Achievement
-        fields = '__all__'
+        fields = ["id", "code", "title", "description", "icon", "color", "goal"]
+
+
+class UserAchievementSerializer(serializers.ModelSerializer):
+    # para retornar os dados completos da conquista
+    achievement = AchievementSerializer(read_only=True)
+    # para receber só o id na criação/atualização
+    achievement_id = serializers.PrimaryKeyRelatedField(
+        queryset=Achievement.objects.all(),
+        source="achievement",
+        write_only=True
+    )
+
+    class Meta:
+        model = UserAchievement
+        fields = [
+            "id",
+            "user",
+            "achievement",
+            "achievement_id",
+            "unlocked",
+            "progress",
+            "unlocked_date",
+        ]
