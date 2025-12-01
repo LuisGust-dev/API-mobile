@@ -372,7 +372,9 @@ def achievement_delete(request, ach_id):
 
     return redirect("achievements_list")
 
-
+# ---------------------------------------
+# CRUD - WATER
+# ---------------------------------------
 def water_list(request):
     token = request.session.get("token")
     if not token:
@@ -398,3 +400,70 @@ def water_list(request):
     }
 
     return render(request, "adminpanel/water_list.html", context)
+
+def water_edit(request, log_id):
+    token = request.session.get("token")
+    headers = {"Authorization": f"Bearer {token}"}
+
+    resp = requests.get(f"{API_BASE}/water/logs/{log_id}/", headers=headers)
+    if resp.status_code != 200:
+        return redirect("water_list")
+
+    log = resp.json()
+
+    if request.method == "POST":
+        payload = {
+            "user": request.POST["user"],
+            "amount_ml": request.POST["amount_ml"],
+            "timestamp_ms": request.POST["timestamp_ms"]
+        }
+        requests.put(f"{API_BASE}/water/logs/{log_id}/", json=payload, headers=headers)
+        return redirect("water_list")
+
+    return render(request, "adminpanel/water_form.html", {"log": log})
+
+
+def water_delete(request, log_id):
+    token = request.session.get("token")
+    headers = {"Authorization": f"Bearer {token}"}
+    requests.delete(f"{API_BASE}/water/logs/{log_id}/", headers=headers)
+    return redirect("water_list")
+
+# ---------------------------------------
+# CRUD - EXERCISE
+# ---------------------------------------
+def exercise_list(request):
+    token = request.session.get("token")
+    headers = {"Authorization": f"Bearer {token}"}
+    resp = requests.get(f"{API_BASE}/exercise/logs/", headers=headers)
+    logs = resp.json() if resp.status_code == 200 else []
+    return render(request, "adminpanel/exercise_list.html", {"logs": logs})
+
+
+def exercise_edit(request, log_id):
+    token = request.session.get("token")
+    headers = {"Authorization": f"Bearer {token}"}
+    resp = requests.get(f"{API_BASE}/exercise/logs/{log_id}/", headers=headers)
+    if resp.status_code != 200:
+        return redirect("exercise_list")
+
+    log = resp.json()
+
+    if request.method == "POST":
+        payload = {
+            "user": request.POST["user"],
+            "type": request.POST["type"],
+            "intensity": request.POST["intensity"],
+            "duration_min": request.POST["duration_min"],
+            "timestamp_ms": request.POST["timestamp_ms"]
+        }
+        requests.put(f"{API_BASE}/exercise/logs/{log_id}/", json=payload, headers=headers)
+        return redirect("exercise_list")
+
+    return render(request, "adminpanel/exercise_form.html", {"log": log})
+
+def exercise_delete(request, log_id):
+    token = request.session.get("token")
+    headers = {"Authorization": f"Bearer {token}"}
+    requests.delete(f"{API_BASE}/exercise/logs/{log_id}/", headers=headers)
+    return redirect("exercise_list")
