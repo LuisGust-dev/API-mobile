@@ -19,11 +19,21 @@
     </div>
 
     {% if not habit %}
-    <div class="mb-3">
-        <label class="form-label">ID do Usuário</label>
-        <input type="number" name="user_id" class="form-control" required>
-        <small class="text-muted">Informe o ID do usuário dono do hábito.</small>
-    </div>
+            <div class="mb-3">
+            <label class="form-label">Usuário</label>
+            
+            <select name="user_id" class="form-select" required>
+                <option value="" selected disabled>Selecione um usuário...</option>
+                
+                {% for u in users %}
+                    <option value="{{ u.id }}">
+                        {{ u.name }} (ID: {{ u.id }})
+                    </option>
+                {% endfor %}
+                
+            </select>
+            <small class="text-muted">Selecione o usuário dono do hábito.</small>
+        </div>
     {% endif %}
 
     <button class="btn btn-success">Salvar</button>

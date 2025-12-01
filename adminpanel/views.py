@@ -218,7 +218,7 @@ def habits_list(request):
     resp = requests.get(f"{API_BASE}/habits/", headers=headers)
     habits = resp.json() if resp.status_code == 200 else []
 
-    return render(request, "adminpanel/habits_list.html", {"habits": habits})
+    return render(request, "adminpanel/habits_list.html", {"habits": habits, })
 
 
 def habit_create(request):
@@ -226,9 +226,9 @@ def habit_create(request):
     if not token:
         return redirect("panel_login")
 
-    if request.method == "POST":
-        headers = {"Authorization": f"Bearer {token}"}
+    headers = {"Authorization": f"Bearer {token}"}
 
+    if request.method == "POST":
         payload = {
             "title": request.POST["name"],
             "description": request.POST["description"],
@@ -238,7 +238,16 @@ def habit_create(request):
         requests.post(f"{API_BASE}/habits/", json=payload, headers=headers)
         return redirect("habits_list")
 
-    return render(request, "adminpanel/habit_form.html", {"habit": None})
+    try:
+        response = requests.get(f"{API_BASE}/users/", headers=headers)
+        if response.status_code == 200:
+            users = response.json()
+        else:
+            users = []
+    except:
+        users = []
+
+    return render(request, "adminpanel/habit_form.html", {"habit": None, 'users': users})
 
 
 def habit_edit(request, habit_id):
@@ -362,3 +371,30 @@ def achievement_delete(request, ach_id):
     requests.delete(f"{API_BASE}/achievements/{ach_id}/", headers=headers)
 
     return redirect("achievements_list")
+
+
+def water_list(request):
+    token = request.session.get("token")
+    if not token:
+        return redirect("panel_login")
+    headers = {"Authorization": f"Bearer {token}"}
+    
+    response = requests.get(f"{API_BASE}/water/", headers=headers)
+    
+    if response.status_code == 200:
+        water_logs = response.json()
+    else:
+        water_logs = []
+
+    total_ml = sum(item['amount_ml'] for item in water_logs)
+    total_liters = total_ml / 1000
+
+    total_records = len(water_logs)
+
+    context = {
+        "water_logs": water_logs,
+        "total_liters": total_liters,
+        "total_records": total_records
+    }
+
+    return render(request, "adminpanel/water_list.html", context)
