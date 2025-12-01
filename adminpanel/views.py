@@ -362,3 +362,40 @@ def achievement_delete(request, ach_id):
     requests.delete(f"{API_BASE}/achievements/{ach_id}/", headers=headers)
 
     return redirect("achievements_list")
+
+def water_list(request):
+    token = request.session.get("token")
+    headers = {"Authorization": f"Bearer {token}"}
+    resp = requests.get(f"{API_BASE}/water/logs/", headers=headers)
+    water_logs = resp.json() if resp.status_code == 200 else []
+    return render(request, "adminpanel/water_list.html", {"water_logs": water_logs})
+
+
+def water_edit(request, log_id):
+    token = request.session.get("token")
+    headers = {"Authorization": f"Bearer {token}"}
+
+    resp = requests.get(f"{API_BASE}/water/logs/{log_id}/", headers=headers)
+    if resp.status_code != 200:
+        return redirect("water_list")
+
+    log = resp.json()
+
+    if request.method == "POST":
+        payload = {
+            "user": request.POST["user"],
+            "amount_ml": request.POST["amount_ml"],
+            "timestamp_ms": request.POST["timestamp_ms"]
+        }
+        requests.put(f"{API_BASE}/water/logs/{log_id}/", json=payload, headers=headers)
+        return redirect("water_list")
+
+    return render(request, "adminpanel/water_form.html", {"log": log})
+
+
+def water_delete(request, log_id):
+    token = request.session.get("token")
+    headers = {"Authorization": f"Bearer {token}"}
+    requests.delete(f"{API_BASE}/water/logs/{log_id}/", headers=headers)
+    return redirect("water_list")
+
