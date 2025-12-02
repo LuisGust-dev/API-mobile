@@ -1,0 +1,78 @@
+{% extends "adminpanel/base.html" %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        {% if water %}
+            <span class="material-symbols-outlined" style="vertical-align: middle;">edit</span> 
+            Editar Registro
+        {% else %}
+            <span class="material-symbols-outlined" style="vertical-align: middle;">add_circle</span> 
+            Novo Registro de Água
+        {% endif %}
+    </h2>
+</div>
+<hr>
+
+<form method="POST" class="card p-4 shadow-sm">
+    {% csrf_token %}
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label class="form-label fw-bold">Quantidade (ml)</label>
+            <div class="input-group">
+                <input type="number" name="amount_ml" class="form-control"
+                       value="{{ water.amount_ml|default:'' }}" 
+                       placeholder="Ex: 250" required>
+                <span class="input-group-text">ml</span>
+            </div>  
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label class="form-label fw-bold">Data e Hora</label>
+            <input type="datetime-local" name="datetime" class="form-control" 
+                   value="{{ formatted_date|default:'' }}" required>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label fw-bold">Usuário</label>
+        
+        {% if water %}
+            <div class="input-group">
+                <span class="input-group-text bg-light">
+                    <span class="material-symbols-outlined">person</span>
+                </span>
+                <input type="text" class="form-control bg-light" 
+                       value="{{ water_user_name|default:'Usuário não identificado' }}" 
+                       disabled readonly>
+            </div>
+            <small class="text-muted">⚠ O usuário não pode ser alterado após a criação.</small>
+
+        {% else %}
+            <select name="user_id" class="form-select" required>
+                <option value="" selected disabled>Selecione o usuário...</option>
+                
+                {% for u in users %}
+                    <option value="{{ u.id }}">
+                        {{ u.name }} (ID: {{ u.id }})
+                    </option>
+                {% endfor %}
+            </select>
+            <small class="text-muted">Selecione para quem é este registro.</small>
+        {% endif %}
+    </div>
+
+    <div class="mt-4 d-flex gap-2">
+        <button type="submit" class="btn {% if water %}btn-warning{% else %}btn-success{% endif %}">
+            <span class="material-symbols-outlined" style="vertical-align: middle; font-size: 18px;">save</span>
+            {% if water %} Salvar Alterações {% else %} Criar Registro {% endif %}
+        </button>
+
+        <a href="/panel/water/" class="btn btn-secondary">
+            Cancelar
+        </a>
+    </div>
+</form>
+
+{% endblock %}

@@ -12,7 +12,7 @@ from .views import (
     achievements_list, achievement_create, achievement_edit, achievement_delete,
 
     # Water
-    water_list,
+    water_list, water_create, water_edit, water_delete,
 )
 
 urlpatterns = [
@@ -40,9 +40,11 @@ urlpatterns = [
     
     # WATER
     path("water/", water_list, name="water_list"),
-    # path("water/create/", water_create, name="water_create"),
-    # path("water/<int:ach_id>/edit/", water_edit, name="water_edit"),
-    # path("water/<int:ach_id>/delete/", water_delete, name="water_delete"),
+    path("water/create/", water_create, name="water_create"),
+    path("water/<int:log_id>/edit/", water_edit, name="water_edit"),
+    path("water/<int:log_id>/delete/", water_delete, name="water_delete"),
+    
+    
     # EXERCISE
 
 ]
