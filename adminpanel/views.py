@@ -1,3 +1,4 @@
+from datetime import datetime
 import requests
 from django.shortcuts import render, redirect
 from django.contrib import messages
@@ -375,22 +376,55 @@ def achievement_delete(request, ach_id):
 # ---------------------------------------
 # CRUD - WATER
 # ---------------------------------------
+def water_create(request):
+    token = request.session.get("token")
+    if not token:
+        return redirect("panel_login")
+    headers = {"Authorization": f"Bearer {token}"}
+
+    if request.method == "POST":
+        date_str = request.POST.get("datetime")
+        dt_obj = datetime.strptime(date_str, "%Y-%m-%dT%H:%M")
+        timestamp_ms = int(dt_obj.timestamp() * 1000)
+
+        payload = {
+            "user": request.POST["user_id"],
+            "amount_ml": request.POST["amount_ml"],
+            "timestamp_ms": timestamp_ms
+        }
+        
+        requests.post(f"{API_BASE}/water/", json=payload, headers=headers)
+        return redirect("water_list")
+
+    try:
+        response = requests.get(f"{API_BASE}/users/", headers=headers)
+        users = response.json() if response.status_code == 200 else []
+    except:
+        users = []
+
+    default_date = datetime.now().strftime('%Y-%m-%dT%H:%M')
+    
+    return render(request, "adminpanel/water_form.html", {
+        "water": None, 
+        "users": users,
+        "formatted_date": default_date
+    })
+
 def water_list(request):
     token = request.session.get("token")
     if not token:
         return redirect("panel_login")
     headers = {"Authorization": f"Bearer {token}"}
     
-    response = requests.get(f"{API_BASE}/water/", headers=headers)
-    
+    response = requests.get(f"{API_BASE}/water/logs/", headers=headers)
     if response.status_code == 200:
         water_logs = response.json()
     else:
         water_logs = []
 
-    total_ml = sum(item['amount_ml'] for item in water_logs)
+    total_ml = sum(item.get('amount_ml', 0) for item in water_logs)
+    
     total_liters = total_ml / 1000
-
     total_records = len(water_logs)
 
     context = {
