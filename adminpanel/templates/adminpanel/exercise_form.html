@@ -1,0 +1,95 @@
+{% extends "adminpanel/base.html" %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        {% if exercise %}
+            <span class="material-symbols-outlined" style="vertical-align: middle;">edit</span> 
+            Editar Exercício
+        {% else %}
+            <span class="material-symbols-outlined" style="vertical-align: middle;">fitness_center</span> 
+            Novo Exercício
+        {% endif %}
+    </h2>
+</div>
+<hr>
+
+<form method="POST" class="card p-4 shadow-sm">
+    {% csrf_token %}
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label class="form-label fw-bold">Tipo de Atividade</label>
+            <input type="text" name="type" class="form-control"
+                   value="{{ exercise.type|default:'' }}" 
+                   placeholder="Ex: Corrida, Yoga, Musculação..." required>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label class="form-label fw-bold">Intensidade</label>
+            <select name="intensity" class="form-select" required>
+                <option value="" disabled {% if not exercise %}selected{% endif %}>Selecione...</option>
+                
+                <option value="Leve" {% if exercise.intensity == 'Leve' %}selected{% endif %}>🟢 Leve</option>
+                <option value="Moderada" {% if exercise.intensity == 'Moderada' %}selected{% endif %}>🟡 Moderada</option>
+                <option value="Intensa" {% if exercise.intensity == 'Intensa' %}selected{% endif %}>🔴 Intensa</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label class="form-label fw-bold">Duração</label>
+            <div class="input-group">
+                <input type="number" name="duration_min" class="form-control"
+                       value="{{ exercise.duration_min|default:'' }}" 
+                       placeholder="Ex: 45" min="1" required>
+                <span class="input-group-text">min</span>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label class="form-label fw-bold">Data e Hora</label>
+            <input type="datetime-local" name="datetime" class="form-control" 
+                   value="{{ formatted_date|default:'' }}" required>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label fw-bold">Usuário</label>
+        
+        {% if exercise %}
+            <div class="input-group">
+                <span class="input-group-text bg-light">
+                    <span class="material-symbols-outlined">person</span>
+                </span>
+                <input type="text" class="form-control bg-light" 
+                       value="{{ exercise_user_name|default:'Usuário não identificado' }}" 
+                       disabled readonly>
+            </div>
+            <small class="text-muted">⚠ O usuário não pode ser alterado após a criação.</small>
+
+        {% else %}
+            <select name="user_id" class="form-select" required>
+                <option value="" selected disabled>Selecione o usuário...</option>
+                {% for u in users %}
+                    <option value="{{ u.id }}">{{ u.name }} (ID: {{ u.id }})</option>
+                {% endfor %}
+            </select>
+            <small class="text-muted">Selecione quem realizou o exercício.</small>
+        {% endif %}
+    </div>
+
+    <div class="mt-4 d-flex gap-2">
+        <button type="submit" class="btn {% if exercise %}btn-warning{% else %}btn-success{% endif %}">
+            <span class="material-symbols-outlined" style="vertical-align: middle; font-size: 18px;">save</span>
+            {% if exercise %} Salvar Alterações {% else %} Criar Exercício {% endif %}
+        </button>
+
+        <a href="/panel/exercises/" class="btn btn-secondary">
+            Cancelar
+        </a>
+    </div>
+</form>
+
+{% endblock %}
