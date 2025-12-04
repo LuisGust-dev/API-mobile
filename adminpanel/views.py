@@ -402,7 +402,7 @@ def water_create(request):
             "timestamp_ms": timestamp_ms
         }
         
-        requests.post(f"{API_BASE}/water/", json=payload, headers=headers)
+        requests.post(f"{API_BASE}/water/logs/", json=payload, headers=headers)
         return redirect("water_list")
 
     try:
@@ -463,7 +463,7 @@ def water_edit(request, log_id):
         requests.put(f"{API_BASE}/water/logs/{log_id}/", json=payload, headers=headers)
         return redirect("water_list")
 
-    return render(request, "adminpanel/water_form.html", {"log": log})
+    return render(request, "adminpanel/water_form.html", {"water": log})
 
 
 def water_delete(request, log_id):
