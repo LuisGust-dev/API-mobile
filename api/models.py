@@ -16,7 +16,7 @@ class AppUserManager(BaseUserManager):
 
         email = self.normalize_email(email)
         user = self.model(email=email, name=name)
-        user.set_password(password)  # 🔥 Agora criptografa corretamente
+        user.set_password(password)
         user.save(using=self._db)
         return user
 

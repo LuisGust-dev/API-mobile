@@ -1,3 +1,4 @@
+from datetime import datetime
 import requests
 from django.shortcuts import render, redirect
 from django.contrib import messages
@@ -123,9 +124,15 @@ def users_page(request):
     if response.status_code == 401:
         request.session.flush()
         return redirect('panel_login')
-
+    
     users = response.json()
-    return render(request, 'adminpanel/users.html', {"users": users})
+
+    context={
+        "total_users": len(users),
+        "users": users
+    }
+
+    return render(request, 'adminpanel/users.html', context)
 
 
 # ---------------------------------------
@@ -221,7 +228,7 @@ def habits_list(request):
     resp = requests.get(f"{API_BASE}/habits/", headers=headers)
     habits = resp.json() if resp.status_code == 200 else []
 
-    return render(request, "adminpanel/habits_list.html", {"habits": habits})
+    return render(request, "adminpanel/habits_list.html", {"habits": habits, })
 
 
 def habit_create(request):
@@ -229,9 +236,9 @@ def habit_create(request):
     if not token:
         return redirect("panel_login")
 
-    if request.method == "POST":
-        headers = {"Authorization": f"Bearer {token}"}
+    headers = {"Authorization": f"Bearer {token}"}
 
+    if request.method == "POST":
         payload = {
             "title": request.POST["name"],
             "description": request.POST["description"],
@@ -241,7 +248,16 @@ def habit_create(request):
         requests.post(f"{API_BASE}/habits/", json=payload, headers=headers)
         return redirect("habits_list")
 
-    return render(request, "adminpanel/habit_form.html", {"habit": None})
+    try:
+        response = requests.get(f"{API_BASE}/users/", headers=headers)
+        if response.status_code == 200:
+            users = response.json()
+        else:
+            users = []
+    except:
+        users = []
+
+    return render(request, "adminpanel/habit_form.html", {"habit": None, 'users': users})
 
 
 def habit_edit(request, habit_id):
@@ -365,3 +381,132 @@ def achievement_delete(request, ach_id):
     requests.delete(f"{API_BASE}/achievements/{ach_id}/", headers=headers)
 
     return redirect("achievements_list")
+
+# ---------------------------------------
+# CRUD - WATER
+# ---------------------------------------
+def water_create(request):
+    token = request.session.get("token")
+    if not token:
+        return redirect("panel_login")
+    headers = {"Authorization": f"Bearer {token}"}
+
+    if request.method == "POST":
+        date_str = request.POST.get("datetime")
+        dt_obj = datetime.strptime(date_str, "%Y-%m-%dT%H:%M")
+        timestamp_ms = int(dt_obj.timestamp() * 1000)
+
+        payload = {
+            "user": request.POST["user_id"],
+            "amount_ml": request.POST["amount_ml"],
+            "timestamp_ms": timestamp_ms
+        }
+        
+        requests.post(f"{API_BASE}/water/", json=payload, headers=headers)
+        return redirect("water_list")
+
+    try:
+        response = requests.get(f"{API_BASE}/users/", headers=headers)
+        users = response.json() if response.status_code == 200 else []
+    except:
+        users = []
+
+    default_date = datetime.now().strftime('%Y-%m-%dT%H:%M')
+    
+    return render(request, "adminpanel/water_form.html", {
+        "water": None, 
+        "users": users,
+        "formatted_date": default_date
+    })
+
+def water_list(request):
+    token = request.session.get("token")
+    if not token:
+        return redirect("panel_login")
+    headers = {"Authorization": f"Bearer {token}"}
+    
+    response = requests.get(f"{API_BASE}/water/logs/", headers=headers)
+    if response.status_code == 200:
+        water_logs = response.json()
+    else:
+        water_logs = []
+
+    total_ml = sum(item.get('amount_ml', 0) for item in water_logs)
+    
+    total_liters = total_ml / 1000
+    total_records = len(water_logs)
+
+    context = {
+        "water_logs": water_logs,
+        "total_liters": total_liters,
+        "total_records": total_records
+    }
+
+    return render(request, "adminpanel/water_list.html", context)
+
+def water_edit(request, log_id):
+    token = request.session.get("token")
+    headers = {"Authorization": f"Bearer {token}"}
+
+    resp = requests.get(f"{API_BASE}/water/logs/{log_id}/", headers=headers)
+    if resp.status_code != 200:
+        return redirect("water_list")
+
+    log = resp.json()
+
+    if request.method == "POST":
+        payload = {
+            "user": request.POST["user"],
+            "amount_ml": request.POST["amount_ml"],
+            "timestamp_ms": request.POST["timestamp_ms"]
+        }
+        requests.put(f"{API_BASE}/water/logs/{log_id}/", json=payload, headers=headers)
+        return redirect("water_list")
+
+    return render(request, "adminpanel/water_form.html", {"log": log})
+
+
+def water_delete(request, log_id):
+    token = request.session.get("token")
+    headers = {"Authorization": f"Bearer {token}"}
+    requests.delete(f"{API_BASE}/water/logs/{log_id}/", headers=headers)
+    return redirect("water_list")
+
+# ---------------------------------------
+# CRUD - EXERCISE
+# ---------------------------------------
+def exercise_list(request):
+    token = request.session.get("token")
+    headers = {"Authorization": f"Bearer {token}"}
+    resp = requests.get(f"{API_BASE}/exercise/logs/", headers=headers)
+    logs = resp.json() if resp.status_code == 200 else []
+    return render(request, "adminpanel/exercise_list.html", {"logs": logs})
+
+
+def exercise_edit(request, log_id):
+    token = request.session.get("token")
+    headers = {"Authorization": f"Bearer {token}"}
+    resp = requests.get(f"{API_BASE}/exercise/logs/{log_id}/", headers=headers)
+    if resp.status_code != 200:
+        return redirect("exercise_list")
+
+    log = resp.json()
+
+    if request.method == "POST":
+        payload = {
+            "user": request.POST["user"],
+            "type": request.POST["type"],
+            "intensity": request.POST["intensity"],
+            "duration_min": request.POST["duration_min"],
+            "timestamp_ms": request.POST["timestamp_ms"]
+        }
+        requests.put(f"{API_BASE}/exercise/logs/{log_id}/", json=payload, headers=headers)
+        return redirect("exercise_list")
+
+    return render(request, "adminpanel/exercise_form.html", {"log": log})
+
+def exercise_delete(request, log_id):
+    token = request.session.get("token")
+    headers = {"Authorization": f"Bearer {token}"}
+    requests.delete(f"{API_BASE}/exercise/logs/{log_id}/", headers=headers)
+    return redirect("exercise_list")

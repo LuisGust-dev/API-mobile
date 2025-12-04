@@ -10,11 +10,18 @@ from .views import (
 
     # Achievements
     achievements_list, achievement_create, achievement_edit, achievement_delete,
+
+    # Water
+    water_list, water_create, water_edit, water_delete,
+
+    # Exercise
+    exercise_list, exercise_edit, exercise_delete,
 )
 
 urlpatterns = [
     path("login/", panel_login, name="panel_login"),
     path("", dashboard, name="dashboard"),
+    path("logout/", logout_view, name="logout"),
 
     # USERS
     path("users/", users_page, name="users_page"),
@@ -33,6 +40,17 @@ urlpatterns = [
     path("achievements/create/", achievement_create, name="achievement_create"),
     path("achievements/<int:ach_id>/edit/", achievement_edit, name="achievement_edit"),
     path("achievements/<int:ach_id>/delete/", achievement_delete, name="achievement_delete"),
-    path("logout/", logout_view, name="logout"),
+    
+    # WATER
+    path("water/", water_list, name="water_list"),
+    path("water/create/", water_create, name="water_create"),
+    path("water/<int:log_id>/edit/", water_edit, name="water_edit"),
+    path("water/<int:log_id>/delete/", water_delete, name="water_delete"),
+    
+    
+    # EXERCISE
+    path("exercise/", exercise_list, name="exercise_list"),
+    path("exercise/<int:log_id>/edit/", exercise_edit, name="exercise_edit"),
+    path("exercise/<int:log_id>/delete/", exercise_delete, name="exercise_delete"),
 
 ]
