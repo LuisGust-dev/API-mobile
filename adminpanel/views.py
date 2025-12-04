@@ -9,22 +9,25 @@ API_BASE = "http://127.0.0.1:8000/api"
 # ---------------------------------------
 def panel_login(request):
     if request.method == "POST":
-        email = request.POST['username']  
+        email = request.POST['username']
         password = request.POST['password']
 
+        # 🔥 ROTA CERTA (AppLoginView)
         response = requests.post(
-            "http://127.0.0.1:8000/api/auth/login/",
+            "http://127.0.0.1:8000/api/login/",
             json={"email": email, "password": password}
         )
 
         if response.status_code == 200:
             data = response.json()
+            # salva o token corretamente
             request.session['token'] = data['access']
             return redirect('dashboard')
         else:
             messages.error(request, "Login inválido.")
 
     return render(request, 'adminpanel/login.html')
+
 
 
 
