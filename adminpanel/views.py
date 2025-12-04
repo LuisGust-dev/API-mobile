@@ -121,9 +121,15 @@ def users_page(request):
     if response.status_code == 401:
         request.session.flush()
         return redirect('panel_login')
-
+    
     users = response.json()
-    return render(request, 'adminpanel/users.html', {"users": users})
+
+    context={
+        "total_users": len(users),
+        "users": users
+    }
+
+    return render(request, 'adminpanel/users.html', context)
 
 
 # ---------------------------------------

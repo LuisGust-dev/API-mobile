@@ -13,6 +13,9 @@ from .views import (
 
     # Water
     water_list, water_create, water_edit, water_delete,
+
+    # Exercise
+    exercise_list, exercise_edit, exercise_delete,
 )
 
 urlpatterns = [
@@ -46,5 +49,8 @@ urlpatterns = [
     
     
     # EXERCISE
+    path("exercise/", exercise_list, name="exercise_list"),
+    path("exercise/<int:log_id>/edit/", exercise_edit, name="exercise_edit"),
+    path("exercise/<int:log_id>/delete/", exercise_delete, name="exercise_delete"),
 
 ]
