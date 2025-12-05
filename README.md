@@ -10,7 +10,7 @@ Antes de iniciar, tenha instalado:
 ## 2. Criar e ativar o ambiente virtual
 
 Windows
-python -m venv venv
+py -m venv venv
 venv\Scripts\activate
 
 Linux

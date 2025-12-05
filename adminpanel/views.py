@@ -240,13 +240,16 @@ def habit_create(request):
 
     if request.method == "POST":
         payload = {
-            "title": request.POST["name"],
-            "description": request.POST["description"],
-            "user": request.POST["user_id"],
+            "name": request.POST["name"],
+            "icon": request.POST["icon"],
+            "color": request.POST["color"],
+            "frequency": request.POST["frequency"],
+            "user": int(request.POST["user_id"]),
         }
 
         requests.post(f"{API_BASE}/habits/", json=payload, headers=headers)
         return redirect("habits_list")
+
 
     try:
         response = requests.get(f"{API_BASE}/users/", headers=headers)
@@ -258,7 +261,6 @@ def habit_create(request):
         users = []
 
     return render(request, "adminpanel/habit_form.html", {"habit": None, 'users': users})
-
 
 def habit_edit(request, habit_id):
     token = request.session.get("token")
@@ -272,14 +274,26 @@ def habit_edit(request, habit_id):
 
     if request.method == "POST":
         payload = {
-            "title": request.POST["name"],
-            "description": request.POST["description"],
+            "title": request.POST.get("title"),
+            "name": request.POST.get("name"),
+            "icon": request.POST.get("icon"),
+            "color": request.POST.get("color"),
+            "frequency": request.POST.get("frequency"),
+            "description": request.POST.get("description"),
         }
 
-        requests.put(f"{API_BASE}/habits/{habit_id}/", json=payload, headers=headers)
+        requests.put(
+            f"{API_BASE}/habits/{habit_id}/",
+            json=payload,
+            headers=headers
+        )
+
         return redirect("habits_list")
 
-    return render(request, "adminpanel/habit_form.html", {"habit": habit})
+    return render(request, "adminpanel/habit_form.html", {
+        "habit": habit
+    })
+
 
 
 def habit_delete(request, habit_id):

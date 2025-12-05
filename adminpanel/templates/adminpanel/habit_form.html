@@ -8,32 +8,47 @@
     {% csrf_token %}
 
     <div class="mb-3">
-        <label class="form-label">Título</label>
+        <label class="form-label">Nome do Hábito</label>
         <input type="text" name="name" class="form-control"
-               value="{{ habit.title|default:'' }}" required>
+               value="{{ habit.name|default:'' }}" required>
     </div>
 
     <div class="mb-3">
-        <label class="form-label">Descrição</label>
-        <textarea name="description" class="form-control" rows="3" required>{{ habit.description|default:'' }}</textarea>
+        <label class="form-label">Ícone</label>
+        <input type="text" name="icon" class="form-control"
+               value="{{ habit.icon|default:'' }}" required>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Cor</label>
+        <input type="text" name="color" class="form-control"
+               value="{{ habit.color|default:'' }}" required>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Frequência</label>
+        <select name="frequency" class="form-select" required>
+            <option value="" disabled {% if not habit %}selected{% endif %}>Selecione...</option>
+            <option value="daily" {% if habit.frequency == "daily" %}selected{% endif %}>Diário</option>
+            <option value="weekly" {% if habit.frequency == "weekly" %}selected{% endif %}>Semanal</option>
+        </select>
     </div>
 
     {% if not habit %}
-            <div class="mb-3">
-            <label class="form-label">Usuário</label>
-            
-            <select name="user_id" class="form-select" required>
-                <option value="" selected disabled>Selecione um usuário...</option>
-                
-                {% for u in users %}
-                    <option value="{{ u.id }}">
-                        {{ u.name }} (ID: {{ u.id }})
-                    </option>
-                {% endfor %}
-                
-            </select>
-            <small class="text-muted">Selecione o usuário dono do hábito.</small>
-        </div>
+    <div class="mb-3">
+        <label class="form-label">Usuário</label>
+
+        <select name="user_id" class="form-select" required>
+            <option value="" selected disabled>Selecione um usuário...</option>
+
+            {% for u in users %}
+            <option value="{{ u.id }}">
+                {{ u.name }} (ID: {{ u.id }})
+            </option>
+            {% endfor %}
+        </select>
+        <small class="text-muted">Selecione o usuário dono do hábito.</small>
+    </div>
     {% endif %}
 
     <button class="btn btn-success">Salvar</button>

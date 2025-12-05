@@ -12,8 +12,10 @@
             <thead class="table-light">
                 <tr>
                     <th>ID</th>
-                    <th>Título</th>
-                    <th>Descrição</th>
+                    <th>Nome</th>
+                    <th>Ícone</th>
+                    <th>Cor</th>
+                    <th>Frequência</th>
                     <th>Usuário</th>
                     <th style="width: 140px;">Ações</th>
                 </tr>
@@ -23,8 +25,10 @@
                 {% for h in habits %}
                 <tr>
                     <td>{{ h.id }}</td>
-                    <td>{{ h.title }}</td>
-                    <td>{{ h.description|truncatechars:50 }}</td>
+                    <td>{{ h.name }}</td>
+                    <td>{{ h.icon }}</td>
+                    <td>{{ h.color }}</td>
+                    <td>{{ h.frequency }}</td>
                     <td>{{ h.user }}</td>
 
                     <td>
