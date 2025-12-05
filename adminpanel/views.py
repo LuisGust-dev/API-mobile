@@ -479,34 +479,72 @@ def exercise_list(request):
     token = request.session.get("token")
     headers = {"Authorization": f"Bearer {token}"}
     resp = requests.get(f"{API_BASE}/exercise/logs/", headers=headers)
-    logs = resp.json() if resp.status_code == 200 else []
-    return render(request, "adminpanel/exercise_list.html", {"logs": logs})
+    exercises = resp.json() if resp.status_code == 200 else []
+
+    return render(request, "adminpanel/exercise_list.html", {
+        "exercises": exercises
+    })
 
 
-def exercise_edit(request, log_id):
+def exercise_create(request):
     token = request.session.get("token")
     headers = {"Authorization": f"Bearer {token}"}
-    resp = requests.get(f"{API_BASE}/exercise/logs/{log_id}/", headers=headers)
-    if resp.status_code != 200:
-        return redirect("exercise_list")
-
-    log = resp.json()
+    users_resp = requests.get(f"{API_BASE}/users/", headers=headers)
+    users = users_resp.json() if users_resp.status_code == 200 else []
 
     if request.method == "POST":
         payload = {
-            "user": request.POST["user"],
-            "type": request.POST["type"],
-            "intensity": request.POST["intensity"],
-            "duration_min": request.POST["duration_min"],
-            "timestamp_ms": request.POST["timestamp_ms"]
+            "type": request.POST.get("type"),
+            "intensity": request.POST.get("intensity"),
+            "duration_min": request.POST.get("duration_min"),
+            "datetime": request.POST.get("datetime"),
+            "user": request.POST.get("user_id")
         }
-        requests.put(f"{API_BASE}/exercise/logs/{log_id}/", json=payload, headers=headers)
+
+        requests.post(f"{API_BASE}/exercise/logs/", json=payload, headers=headers)
         return redirect("exercise_list")
 
-    return render(request, "adminpanel/exercise_form.html", {"log": log})
+    return render(request, "adminpanel/exercise_form.html", {
+        "exercise": None,
+        "users": users,
+    })
 
-def exercise_delete(request, log_id):
+
+
+def exercise_edit(request, ex_id):
     token = request.session.get("token")
     headers = {"Authorization": f"Bearer {token}"}
-    requests.delete(f"{API_BASE}/exercise/logs/{log_id}/", headers=headers)
+    resp = requests.get(f"{API_BASE}/exercise/logs/{ex_id}/", headers=headers)
+    if resp.status_code != 200:
+        return redirect("exercise_list")
+
+    exercise = resp.json()
+
+    # Converter datetime → formato para input datetime-local
+    formatted_date = exercise.get("datetime", "").replace("Z", "")
+    exercise_user_name = exercise.get("user_data", {}).get("name", "Usuário desconhecido")
+
+    if request.method == "POST":
+        payload = {
+            "type": request.POST.get("type"),
+            "intensity": request.POST.get("intensity"),
+            "duration_min": request.POST.get("duration_min"),
+            "datetime": request.POST.get("datetime"),
+        }
+
+        requests.put(f"{API_BASE}/exercise/logs/{ex_id}/", json=payload, headers=headers)
+        return redirect("exercise_list")
+
+    return render(request, "adminpanel/exercise_form.html", {
+        "exercise": exercise,
+        "formatted_date": formatted_date,
+        "exercise_user_name": exercise_user_name,
+    })
+
+
+def exercise_delete(request, ex_id):
+    token = request.session.get("token")
+    headers = {"Authorization": f"Bearer {token}"}
+
+    requests.delete(f"{API_BASE}/exercise/logs/{ex_id}/", headers=headers)
     return redirect("exercise_list")
