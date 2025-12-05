@@ -32,7 +32,6 @@ class AppUser(AbstractBaseUser, PermissionsMixin):
     name = models.CharField(max_length=150)
     email = models.EmailField(unique=True)
 
-    # Campos obrigatórios para qualquer usuário Django
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
