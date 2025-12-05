@@ -1,16 +1,164 @@
 {% extends "adminpanel/base.html" %}
-
 {% block content %}
-<h2>Dashboard</h2>
-<hr>
 
-<div class="row">
+<h2 class="mb-4">
+    <span class="material-symbols-outlined" style="vertical-align: middle;">dashboard</span>
+    Dashboard Geral
+</h2>
+
+<div class="row g-4">
+
+    <!-- CARD: Usuários -->
     <div class="col-md-3">
-        <div class="card shadow-sm p-3">
-            <h4>Total de Usuários</h4>
-            <p class="display-6">{{ total_users }}</p>
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <span class="material-symbols-outlined text-primary display-5">groups</span>
+                <h5 class="mt-3 text-muted">Usuários Ativos</h5>
+                <h2 class="fw-bold">{{ total_users }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <!-- CARD: Hábitos -->
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <span class="material-symbols-outlined text-success display-5">check_circle</span>
+                <h5 class="mt-3 text-muted">Hábitos Cadastrados</h5>
+                <h2 class="fw-bold">{{ total_habits }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <!-- CARD: Conquistas -->
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <span class="material-symbols-outlined text-warning display-5">emoji_events</span>
+                <h5 class="mt-3 text-muted">Conquistas</h5>
+                <h2 class="fw-bold">{{ total_achievements }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <!-- CARD: Água e Exercício -->
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <span class="material-symbols-outlined text-info display-5">monitor_heart</span>
+                <h5 class="mt-3 text-muted">Atividade Física</h5>
+                <h2 class="fw-bold">{{ chart_exercise.values|length }}</h2>
+            </div>
         </div>
     </div>
 </div>
+
+<!-- SEÇÃO DOS GRÁFICOS -->
+<h3 class="mt-5 mb-3">Atividades Recentes</h3>
+
+<div class="row g-4">
+
+    <!-- GRÁFICO DE ÁGUA -->
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">
+                    <span class="material-symbols-outlined" style="vertical-align: middle;">water_drop</span>
+                    Consumo de Água
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="waterChart" height="120"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- GRÁFICO DE EXERCÍCIOS -->
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">
+                    <span class="material-symbols-outlined" style="vertical-align: middle;">fitness_center</span>
+                    Exercícios Realizados
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="exerciseChart" height="120"></canvas>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- GRÁFICO DE USUÁRIOS (simples) -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">
+                    <span class="material-symbols-outlined" style="vertical-align: middle;">person</span>
+                    Usuários Ativos
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="usersChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CHART JS -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    // 📌 Dados do Django → JS
+    const waterLabels = {{ chart_water.labels|safe }};
+    const waterValues = {{ chart_water.values|safe }};
+
+    const exLabels = {{ chart_exercise.labels|safe }};
+    const exValues = {{ chart_exercise.values|safe }};
+
+    const userLabels = {{ chart_users.labels|safe }};
+    const userValues = {{ chart_users.values|safe }};
+
+    // 🌊 GRÁFICO: Água
+    new Chart(document.getElementById("waterChart"), {
+        type: "line",
+        data: {
+            labels: waterLabels,
+            datasets: [{
+                label: "Consumo (ml)",
+                data: waterValues,
+                borderColor: "#0d6efd",
+                tension: 0.4
+            }]
+        }
+    });
+
+    // 💪 GRÁFICO: Exercício
+    new Chart(document.getElementById("exerciseChart"), {
+        type: "bar",
+        data: {
+            labels: exLabels,
+            datasets: [{
+                label: "Minutos",
+                data: exValues,
+                backgroundColor: "#20c997"
+            }]
+        }
+    });
+
+    // 👥 GRÁFICO: Usuários
+    new Chart(document.getElementById("usersChart"), {
+        type: "doughnut",
+        data: {
+            labels: userLabels,
+            datasets: [{
+                data: userValues,
+                backgroundColor: ["#6610f2"]
+            }]
+        }
+    });
+</script>
 
 {% endblock %}

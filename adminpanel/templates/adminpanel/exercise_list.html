@@ -3,6 +3,11 @@
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2>Registros de Exercícios</h2>
+
+    <a href="/panel/exercises/create/" class="btn btn-success">
+        <span class="material-symbols-outlined" style="vertical-align: middle;">add</span>
+        Novo Exercício
+    </a>
 </div>
 
 <div class="row mb-4">
@@ -12,9 +17,7 @@
                 <span class="material-symbols-outlined display-4 me-3">timer</span>
                 <div>
                     <h6 class="card-title mb-0 opacity-75">Tempo Total</h6>
-                    <h2 class="fw-bold mb-0">
-                        {{ total_minutes|default:"0" }} min
-                    </h2>
+                    <h2 class="fw-bold mb-0">{{ total_minutes }} min</h2>
                 </div>
             </div>
         </div>
@@ -26,9 +29,7 @@
                 <span class="material-symbols-outlined display-4 me-3">fitness_center</span>
                 <div>
                     <h6 class="card-title mb-0 text-muted">Treinos Realizados</h6>
-                    <h2 class="fw-bold mb-0 text-dark">
-                        {{ total_records|default:"0" }}
-                    </h2>
+                    <h2 class="fw-bold mb-0">{{ total_records }}</h2>
                 </div>
             </div>
         </div>
@@ -40,13 +41,13 @@
         <table class="table table-striped mb-0 align-middle">
             <thead class="table-light">
                 <tr>
-                    <th style="width: 60px;">ID</th>
+                    <th>ID</th>
                     <th>Usuário</th>
                     <th>Atividade</th>
                     <th>Intensidade</th>
                     <th>Duração</th>
                     <th>Data/Hora</th>
-                    <th style="width: 140px;">Ações</th>
+                    <th>Ações</th>
                 </tr>
             </thead>
 
@@ -54,41 +55,30 @@
                 {% for l in logs %}
                 <tr>
                     <td>{{ l.id }}</td>
-                    
-                    <td class="fw">{{ l.user }}</td>
-                    
+                    <td>{{ l.user_data.name }}</td>
                     <td>{{ l.type }}</td>
-                    
+
                     <td>
                         {% if l.intensity == 'Leve' %}
-                            <span class="badge bg-success bg-opacity-75">Leve</span>
+                            <span class="badge bg-success">Leve</span>
                         {% elif l.intensity == 'Moderada' %}
                             <span class="badge bg-warning text-dark">Moderada</span>
                         {% elif l.intensity == 'Intensa' %}
                             <span class="badge bg-danger">Intensa</span>
-                        {% else %}
-                            <span class="badge bg-secondary">{{ l.intensity }}</span>
                         {% endif %}
                     </td>
 
-                    <td class="fw">{{ l.duration_min }} min</td>
+                    <td>{{ l.duration_min }} min</td>
 
-                    <td class="format-date" data-ms="{{ l.timestamp_ms }}">
-                        {{ l.timestamp_ms }}
-                    </td>
+                    <td>{{ l.datetime|default:"-" }}</td>
 
                     <td>
-                        <a href="/panel/exercise/{{ l.id }}/edit/" class="btn btn-sm btn-warning" title="Editar">
-                            <span class="material-symbols-outlined" style="font-size: 16px;">edit</span>
-                        </a>
-                        <a href="/panel/exercise/{{ l.id }}/delete/" 
-                           class="btn btn-sm btn-danger"
-                           onclick="return confirm('Tem certeza que deseja excluir este treino?');"
-                           title="Excluir">
-                           <span class="material-symbols-outlined" style="font-size: 16px;">delete</span>
+                        <a href="/panel/exercises/{{ l.id }}/edit/" class="btn btn-sm btn-warning">Editar</a>
+                        <a href="/panel/exercises/{{ l.id }}/delete/" class="btn btn-sm btn-danger"
+                           onclick="return confirm('Excluir este exercício?');">
+                           Excluir
                         </a>
                     </td>
-                    
                 </tr>
                 {% empty %}
                 <tr>
@@ -101,18 +91,5 @@
         </table>
     </div>
 </div>
-
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const dates = document.querySelectorAll('.format-date');
-        dates.forEach(td => {
-            const ms = parseInt(td.getAttribute('data-ms'));
-            if (!isNaN(ms)) {
-                const date = new Date(ms);
-                td.textContent = date.toLocaleString('pt-BR');
-            }
-        });
-    });
-</script>
 
 {% endblock %}

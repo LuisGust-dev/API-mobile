@@ -479,29 +479,55 @@ def exercise_list(request):
     token = request.session.get("token")
     headers = {"Authorization": f"Bearer {token}"}
     resp = requests.get(f"{API_BASE}/exercise/logs/", headers=headers)
-    exercises = resp.json() if resp.status_code == 200 else []
+
+    logs = resp.json() if resp.status_code == 200 else []
+
+    # calcular estatísticas
+    total_minutes = sum(item.get("duration_min", 0) for item in logs)
+    total_records = len(logs)
 
     return render(request, "adminpanel/exercise_list.html", {
-        "exercises": exercises
+        "logs": logs,
+        "total_minutes": total_minutes,
+        "total_records": total_records,
     })
 
+
+
+from datetime import datetime
+import requests
+from django.shortcuts import render, redirect
 
 def exercise_create(request):
     token = request.session.get("token")
     headers = {"Authorization": f"Bearer {token}"}
+
+    # Buscar lista de usuários
     users_resp = requests.get(f"{API_BASE}/users/", headers=headers)
     users = users_resp.json() if users_resp.status_code == 200 else []
 
     if request.method == "POST":
+        # 1️⃣ PEGAR DATA-HORA DO FORM
+        date_str = request.POST.get("datetime")   # formato: 2025-12-05T12:00
+
+        # 2️⃣ CONVERTER PARA OBJETO DATETIME
+        dt_obj = datetime.strptime(date_str, "%Y-%m-%dT%H:%M")
+
+        # 3️⃣ CONVERTER PARA TIMESTAMP EM MS
+        timestamp_ms = int(dt_obj.timestamp() * 1000)
+
+        # 4️⃣ MONTAR PAYLOAD DA API
         payload = {
             "type": request.POST.get("type"),
             "intensity": request.POST.get("intensity"),
             "duration_min": request.POST.get("duration_min"),
-            "datetime": request.POST.get("datetime"),
+            "timestamp_ms": timestamp_ms,   # ✔ CORRETO!
             "user": request.POST.get("user_id")
         }
 
+        # 5️⃣ ENVIAR PARA API
         requests.post(f"{API_BASE}/exercise/logs/", json=payload, headers=headers)
+
         return redirect("exercise_list")
 
     return render(request, "adminpanel/exercise_form.html", {
@@ -511,17 +537,22 @@ def exercise_create(request):
 
 
 
+
+
 def exercise_edit(request, ex_id):
     token = request.session.get("token")
     headers = {"Authorization": f"Bearer {token}"}
+
     resp = requests.get(f"{API_BASE}/exercise/logs/{ex_id}/", headers=headers)
     if resp.status_code != 200:
         return redirect("exercise_list")
 
     exercise = resp.json()
 
-    # Converter datetime → formato para input datetime-local
-    formatted_date = exercise.get("datetime", "").replace("Z", "")
+    # Formatar datetime para input datetime-local
+    raw_dt = exercise.get("datetime", "")
+    formatted_date = raw_dt.replace("Z", "")
+
     exercise_user_name = exercise.get("user_data", {}).get("name", "Usuário desconhecido")
 
     if request.method == "POST":
@@ -529,7 +560,7 @@ def exercise_edit(request, ex_id):
             "type": request.POST.get("type"),
             "intensity": request.POST.get("intensity"),
             "duration_min": request.POST.get("duration_min"),
-            "datetime": request.POST.get("datetime"),
+            "datetime": request.POST.get("datetime")
         }
 
         requests.put(f"{API_BASE}/exercise/logs/{ex_id}/", json=payload, headers=headers)
@@ -540,6 +571,7 @@ def exercise_edit(request, ex_id):
         "formatted_date": formatted_date,
         "exercise_user_name": exercise_user_name,
     })
+
 
 
 def exercise_delete(request, ex_id):

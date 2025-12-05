@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import (
-    logout_view, panel_login, dashboard,
+    exercise_create, logout_view, panel_login, dashboard,
 
     # Users
     users_page, user_details, user_edit, user_delete,
@@ -48,9 +48,11 @@ urlpatterns = [
     path("water/<int:log_id>/delete/", water_delete, name="water_delete"),
     
     
-    # EXERCISE
-    path("exercise/", exercise_list, name="exercise_list"),
-    path("exercise/<int:log_id>/edit/", exercise_edit, name="exercise_edit"),
-    path("exercise/<int:log_id>/delete/", exercise_delete, name="exercise_delete"),
+  # EXERCISES
+path("exercises/", exercise_list, name="exercise_list"),
+path("exercises/create/", exercise_create, name="exercise_create"),
+path("exercises/<int:ex_id>/edit/", exercise_edit, name="exercise_edit"),
+path("exercises/<int:ex_id>/delete/", exercise_delete, name="exercise_delete"),
+
 
 ]
